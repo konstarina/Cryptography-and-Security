@@ -1,17 +1,22 @@
 from tkinter import *
-from tkinter import filedialog, Button
+from tkinter import filedialog
 
 from read_audit import write_audit
+import ast
+import os
+
+SystemDict = {}
 
 
 class App(Frame):
 
-      def __init__(self, master=None):
+    def __init__(self, master=None):
         Frame.__init__(self, master)
         self.master = master
         self.master.title("Security Benchmarking Tool 2.0")
         self.pack(fill=BOTH, expand=1)
-        #self.master.tk_setPalette(background='#ececec')
+        # self.master.tk_setPalette(background='#ececec')
+
         self.search_var = StringVar()
         self.search_var.trace('w', self.highlight_searched)
 
@@ -21,10 +26,11 @@ class App(Frame):
         fileMenu = Menu(menu)
         fileMenu.add_command(label="Open", command=self.openAndWriteOutput)
         fileMenu.add_command(label="Open Audit from Home", command=self.openCustom)
+        fileMenu.add_command(label="Compare", command=self.check)
         fileMenu.add_command(label="Exit", command=self.exitProgram)
         menu.add_cascade(label="File", menu=fileMenu)
 
-        editMenu = Menu(menu)`
+        editMenu = Menu(menu)
         editMenu.add_command(label="Save File As", command=self.saveFile)
         editMenu.add_command(label="Save Custom Audit", command=self.saveCustom)
         editMenu.add_command(label="Select All", command=self.selectAll)
@@ -41,9 +47,40 @@ class App(Frame):
         self.initialList = list()
         self.highlight_searched()
 
-        #self.output = Text()
-        #self.output.pack(fill=BOTH, expand=1)
-    def exitProgram(self):
+        # self.output = Text()
+        # self.output.pack(fill=BOTH, expand=1)
+
+    def check(self):
+        path = os.getcwd()
+        print(path)
+        os.system('Secedit.exe /export /cfg ' + path + '\\security.txt')
+        file = open('security.txt', 'r')
+        input = file.read()
+        san = ""
+        for i in input:
+            if i.isprintable() or i.isspace():
+                san += i
+        san = san.split('\n')
+        san = [x for x in san if len(x) > 0]
+
+        # print(san)
+        for str in san:
+            if '=' in str:
+                to_add = str[str.index('=') + 1:]
+                key_to_add = str[:str.index('=')]
+                result_value = ''
+                result_key = ''
+                for char in to_add:
+                    if char != ' ':
+                        result_value += char
+                for char in key_to_add:
+                    if char != ' ':
+                        result_key += char
+                SystemDict[result_key] = result_value
+        print(SystemDict)
+
+    @staticmethod
+    def exitProgram():
         exit()
 
     def highlight_searched(self, *args):
